@@ -25,6 +25,7 @@ function draw(s, id, count = 1) {
 }
 export function legal(s, id, card) {
   if (!card) return false;
+  if (s.pendingPenalty) return card.value === s.pendingPenalty.value;
   if (card.value === "+4") return !s.hands[id].some((c) => c.color === s.color);
   return card.color === "wild" || card.color === s.color || card.value === s.discard.at(-1).value;
 }
@@ -71,7 +72,7 @@ export const uno = {
     let i = d.findIndex((c) => /^\d$/.test(c.value));
     const first = d.splice(i, 1)[0];
     const order = players.map((p) => p.id), hands = Object.fromEntries(order.map((id) => [id, d.splice(0, startingCards)]));
-    const s = { order, hands, deck: d, discard: [first], startingCards, nextDeckSet: sets, bots: Object.fromEntries(players.map(p => [p.id, !!p.bot])), finished: [], over: false, loser: null, randomFinal: false, color: first.color, turn: order[0], direction: 1, drawn: null, unoPending: null, winner: null, message: "O‘yin boshlandi. Rang yoki raqamni moslang." };
+    const s = { order, hands, deck: d, discard: [first], startingCards, nextDeckSet: sets, bots: Object.fromEntries(players.map(p => [p.id, !!p.bot])), finished: [], over: false, loser: null, randomFinal: false, color: first.color, turn: order[0], direction: 1, drawn: null, pendingPenalty: null, unoPending: null, winner: null, message: "O‘yin boshlandi. Rang yoki raqamni moslang." };
     settle(s);
     return s;
   },
@@ -99,6 +100,14 @@ export const uno = {
     if (a.type === "draw") {
       assert(!s.drawn, "Allaqachon karta oldingiz.");
       s.unoPending = null;
+      if (s.pendingPenalty) {
+        const amount = s.pendingPenalty.amount;
+        s.pendingPenalty = null;
+        draw(s, id, amount);
+        s.message = `${amount} ta jarima karta olindi.`;
+        move(s);
+        return;
+      }
       const before = s.hands[id].length;
       draw(s, id);
       const c2 = s.hands[id].at(-1);
@@ -138,10 +147,15 @@ export const uno = {
     }
     if (c.value === "skip") steps = 2;
     if (c.value === "+2" || c.value === "+4") {
-      draw(s, nextActive(s, id), c.value === "+2" ? 2 : 4);
-      steps = 2;
+      const amount = c.value === "+2" ? 2 : 4;
+      s.pendingPenalty = s.pendingPenalty?.value === c.value
+        ? { value: c.value, amount: s.pendingPenalty.amount + amount }
+        : { value: c.value, amount };
+      steps = 1;
     }
-    s.message = chosen.length > 1 ? `${chosen.length} ta ${c.value} birga tashlandi.` : "Karta tashlandi.";
+    s.message = c.value === "+2" || c.value === "+4"
+      ? `${s.pendingPenalty.amount} ta jarima yig‘ildi. Xuddi shu kartani tashlang yoki oling.`
+      : chosen.length > 1 ? `${chosen.length} ta ${c.value} birga tashlandi.` : "Karta tashlandi.";
     if (hand.length === 1 && !a.uno) s.unoPending = id;
     if (hand.length === 0) {
       s.finished.push(id);
@@ -151,7 +165,7 @@ export const uno = {
     move(s, steps);
   },
   view(s, id) {
-    return { hand: s.hands[id], top: s.discard.at(-1), color: s.color, turn: s.turn, direction: s.direction, drawn: s.turn === id ? s.drawn : null, deckCount: s.deck.length, infiniteDeck: true, startingCards: s.startingCards, counts: Object.fromEntries(s.order.map((p) => [p, s.hands[p].length])), finished: s.finished, loser: s.loser, randomFinal: s.randomFinal, unoPending: s.unoPending, winner: s.winner, message: s.message, legalCards: s.turn === id ? s.hands[id].filter((c) => legal(s, id, c) && (!s.drawn || s.drawn === c.id)).map((c) => c.id) : [] };
+    return { hand: s.hands[id], top: s.discard.at(-1), color: s.color, turn: s.turn, direction: s.direction, drawn: s.turn === id ? s.drawn : null, pendingPenalty: s.turn === id ? s.pendingPenalty : null, deckCount: s.deck.length, infiniteDeck: true, startingCards: s.startingCards, counts: Object.fromEntries(s.order.map((p) => [p, s.hands[p].length])), finished: s.finished, loser: s.loser, randomFinal: s.randomFinal, unoPending: s.unoPending, winner: s.winner, message: s.message, legalCards: s.turn === id ? s.hands[id].filter((c) => legal(s, id, c) && (!s.drawn || s.drawn === c.id)).map((c) => c.id) : [] };
   },
   bot(s, id, level = "medium") {
     if (s.over || s.turn !== id || s.finished.includes(id)) return null;
