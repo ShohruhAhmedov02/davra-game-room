@@ -31,4 +31,5 @@ Free compute umumiy trafik va build limitlariga bo‘ysunadi. Akkauntga to‘lov
 
 Rasmiy manbalar: [Render Web Services](https://render.com/docs/web-services), [WebSockets](https://render.com/docs/websocket), [Blueprint](https://render.com/docs/blueprint-spec), [Free](https://render.com/docs/free).
 
-**Hozirgi holat:** hosting fayllari tayyor; ushbu hujjatning mavjudligi sayt deploy bo‘lganini anglatmaydi. GitHub/Render akkauntlarini ulash va muvaffaqiyatli deploy tasdig‘i kerak.
+**Hozirgi holat:** sayt Render Free Web Service’da jonli: https://davra-game-room.onrender.com. GitHub repository: https://github.com/ShohruhAhmedov02/davra-game-room. Kod yangilanganda Render avtomatik deploy qiladi.
+
