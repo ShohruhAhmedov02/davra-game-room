@@ -56,11 +56,11 @@ function resolveVote(s) {
   }
 }
 export const mafia = {
-  min: 5,
-  max: 12,
+  min: 4,
+  max: 20,
   create(players) {
     const order = players.map((p) => p.id);
-    const n = players.length >= 9 ? 3 : players.length >= 7 ? 2 : 1;
+    const n = players.length >= 17 ? 5 : players.length >= 13 ? 4 : players.length >= 9 ? 3 : players.length >= 7 ? 2 : 1;
     const deck = shuffle([...Array(n).fill("mafia"), "doctor", "commissioner", ...Array(order.length - n - 2).fill("civilian")]);
     const s = { order, roles: Object.fromEntries(order.map((id, i) => [id, deck[i]])), alive: Object.fromEntries(order.map((id) => [id, true])), intel: {}, day: 1, winner: null, chat: [], lastEliminated: null };
     night(s);
