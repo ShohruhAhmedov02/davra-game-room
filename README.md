@@ -123,10 +123,11 @@ Testlar maxsus kartalar, noto‘g‘ri yurishlar, karta maxfiyligi, qayta aralas
 
 ## Hosting va cheklovlar
 
-Internetga joylashtirish uchun `render.yaml` va [DEPLOY.md](DEPLOY.md) kiritilgan. Render Web Service mavjud React + Node.js + Socket.IO arxitekturasini bir HTTPS manzilda ishga tushiradi. Hosting akkauntlarini ulash va deploy tasdig‘i olinmaguncha sayt internetga chiqqan hisoblanmaydi.
+Jonli manzil: **https://davra-game-room.onrender.com**. Render Web Service mavjud React + Node.js + Socket.IO arxitekturasini bir HTTPS manzilda ishga tushiradi. GitHub repository: https://github.com/ShohruhAhmedov02/davra-game-room.
 
-Bu **bir Node.js jarayonli MVP**. Xonalar va sessiyalar RAMda, server qayta ishga tushsa yo‘qoladi. DB, akkaunt, matchmaking, reyting, audio/video chat va Redis klasteri hozir yo‘q. Internetdagi doimiy hosting ushbu topshirishda sozlanmagan; lokal ishga tushirish va manba kod taqdim etiladi.
+Bu **bir Node.js jarayonli MVP**. Xonalar va sessiyalar RAMda; bepul servis uzoq vaqt ishlatilmasa uxlaydi yoki qayta ishga tushsa ma’lumotlar yo‘qoladi. DB, akkaunt, matchmaking, reyting, audio/video chat va Redis klasteri hozir yo‘q. `render.yaml` va [DEPLOY.md](DEPLOY.md) keyingi deploylar uchun kiritilgan.
 
 WebSocket qo‘llaydigan Node.js hostingda build buyrug‘i `npm install && npm run build`, start `npm start`. `PORT` hosting tomonidan berilishi mumkin, `HOST` standart `0.0.0.0`. Bitta domen orqali frontend/backend tavsiya etiladi. Boshqa frontend origin ishlatsangiz `ALLOWED_ORIGINS=https://example.com` kabi aniq ro‘yxat va mijoz manzilini sozlang. `.env.example` namunasi bor; `.env` fayli avtomatik o‘qilmaydi, muhit o‘zgaruvchilarini hostingda belgilang yoki `node --env-file=.env server/index.js` ishlating.
 
 HTTPS/WSS, reverse proxy WebSocket upgrade va uzoq ulanishlarni qo‘llashi kerak. Static-only hosting Node.js backendni ishga tushirmaydi. Keng ommaga ochishdan oldin sessiyalar/xonalar uchun doimiy saqlash, IP darajasida limit, monitoring, yuklama testi va bir nechta server uchun Redis adapter qo‘shing. Hozir socket boshiga 15 amal/soniya, 16 KB so‘rov, 500 xona va 5000 sessiya limiti mavjud; bu to‘liq DDoS himoyasi emas.
+
