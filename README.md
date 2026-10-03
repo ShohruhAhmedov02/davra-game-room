@@ -74,7 +74,7 @@ Himoyachi **Kartalarni olish** desa, boshqalar limitgacha qo‘shishi mumkin. Hu
 
 ### Mafia
 
-5–12 o‘yinchi. 5–6 o‘yinchida 1 Mafia, 7–8 da 2, 9–12 da 3. Har safar 1 Doktor va 1 Komissar, qolganlar Tinch aholi.
+4–20 o‘yinchi. 4–6 o‘yinchida 1 Mafia, 7–8 da 2, 9–12 da 3, 13–16 da 4, 17–20 da 5. Har safar 1 Doktor va 1 Komissar, qolganlar Tinch aholi.
 
 - Tun: Mafia nishon tanlaydi, Doktor bir kishini (o‘zini ham) qutqaradi, Komissar Mafia ekanligini maxfiy tekshiradi. Doktor bir odamni ketma-ket qutqarishi mumkin.
 - Mafia sheriklarini biladi. Mafia nishonlari teng bo‘lsa o‘sha tunda qurbon bo‘lmaydi.
