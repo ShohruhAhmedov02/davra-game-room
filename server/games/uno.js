@@ -122,14 +122,15 @@ export const uno = {
     const chosen = ids.map(cardId => hand.find(card => card.id === cardId));
     assert(chosen.every(Boolean), 'Tanlangan karta sizning qo‘lingizda yo‘q.');
     assert(legal(s, id, chosen[0]), 'Birinchi karta stol rangiga yoki raqamiga mos bo‘lishi kerak.');
-    assert(chosen.length === 1 || /^\d$/.test(chosen[0].value) && chosen.every(card => card.value === chosen[0].value), 'Birga tashlanadigan kartalar bir xil raqamda bo‘lsin.');
+    assert(chosen.length === 1 || chosen.every(card => card.value === chosen[0].value), 'Birga tashlanadigan kartalar bir xil qiymatda bo‘lsin.');
     const c = chosen.at(-1);
-    assert(!s.drawn || s.drawn === chosen[0].id, "Avval hozir olgan kartani tanlang; unga shu raqamli kartalarni qo‘shish mumkin.");
-    assert(c.color !== "wild" || colors.includes(a.color), "Yangi rangni tanlang.");
+    assert(!s.drawn || s.drawn === chosen[0].id, "Avval hozir olgan kartani tanlang; unga shu qiymatdagi kartalarni qo‘shish mumkin.");
+    const chosenColor = c.color === "wild" ? (a.color || s.color) : c.color;
+    assert(c.color !== "wild" || colors.includes(chosenColor), "Yangi rangni tanlang.");
     s.unoPending = null;
     for(let i = hand.length - 1; i >= 0; i--) if(ids.includes(hand[i].id)) hand.splice(i, 1);
     s.discard.push(...chosen);
-    s.color = c.color === "wild" ? a.color : c.color;
+    s.color = c.color === "wild" ? chosenColor : c.color;
     let steps = 1;
     if (c.value === "reverse") {
       s.direction *= -1;
@@ -166,7 +167,7 @@ export const uno = {
       });
     }
     const c = level === "easy" ? pick(cards) : cards[0];
-    if (/^\d$/.test(c.value)) {
+    if (c.value) {
       const matching = h.filter(card => card.value === c.value && card.id !== c.id);
       if (matching.length) return {type:'play',cardIds:[c.id,...matching.map(card=>card.id)],uno:true};
     }
