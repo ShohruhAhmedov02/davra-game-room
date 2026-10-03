@@ -27,8 +27,8 @@ test('Reverse, skip and penalties use only players still in the game',()=>{
   const s=state();s.finished=['p1'];s.hands.p1=[];
   s.hands.p0=[card('action','red',value),card('keep','green','0')];
   const before=s.hands.p2.length;uno.act(s,'p0',{type:'play',cardId:'action'});
-  assert.equal(s.turn,'p3');assert.equal(s.hands.p1.length,0);
-  if(value==='+2')assert.equal(s.hands.p2.length,before+2);
+  assert.equal(s.turn,value==='+2'?'p2':'p3');assert.equal(s.hands.p1.length,0);
+  if(value==='+2'){assert.equal(s.pendingPenalty.amount,2);uno.act(s,'p2',{type:'draw'});assert.equal(s.hands.p2.length,before+2);assert.equal(s.turn,'p3');}
  }
  const s=state();s.finished=['p1','p3'];s.hands.p1=[];s.hands.p3=[];
  s.hands.p0=[card('reverse','red','reverse'),card('keep','green','0')];
