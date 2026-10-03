@@ -31,14 +31,32 @@ test('+2 and +4 groups apply their penalty once', () => {
   const plusTwo = specialState('+2');
   const beforeTwo = plusTwo.hands.b.length;
   uno.act(plusTwo, 'a', { type: 'play', cardIds: ['one', 'two', 'three'], uno: true });
+  assert.equal(plusTwo.hands.b.length, beforeTwo);
+  assert.equal(plusTwo.pendingPenalty.amount, 2);
+  uno.act(plusTwo, 'b', { type: 'draw' });
   assert.equal(plusTwo.hands.b.length, beforeTwo + 2);
 
   const plusFour = specialState('+4');
   plusFour.hands.a = [c('one', 'wild', '+4'), c('two', 'wild', '+4'), c('keep', 'yellow', '9')];
   const beforeFour = plusFour.hands.b.length;
   uno.act(plusFour, 'a', { type: 'play', cardIds: ['one', 'two'], color: 'blue', uno: true });
-  assert.equal(plusFour.hands.b.length, beforeFour + 4);
+  assert.equal(plusFour.hands.b.length, beforeFour);
   assert.equal(plusFour.color, 'blue');
+  uno.act(plusFour, 'b', { type: 'draw' });
+  assert.equal(plusFour.hands.b.length, beforeFour + 4);
+});
+
+test('same penalty cards can be stacked before the penalty is taken', () => {
+  const s = specialState('+2');
+  s.hands.a = [c('a2', 'red', '+2'), c('keep-a', 'yellow', '9')];
+  s.hands.b = [c('b2', 'blue', '+2'), c('keep-b', 'green', '8')];
+  uno.act(s, 'a', { type: 'play', cardId: 'a2' });
+  uno.act(s, 'b', { type: 'play', cardId: 'b2' });
+  assert.equal(s.pendingPenalty.amount, 4);
+  assert.equal(s.turn, 'c');
+  const before = s.hands.c.length;
+  uno.act(s, 'c', { type: 'draw' });
+  assert.equal(s.hands.c.length, before + 4);
 });
 
 test('same-value Wild cards group and keep the chosen or current color', () => {
