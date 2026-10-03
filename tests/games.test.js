@@ -35,6 +35,10 @@ test("UNO validates turn, ownership, color and +4 restrictions", () => {
   const count = s.hands.p1.length;
   uno.act(s, "p0", { type: "play", cardId: "w", color: "blue", uno: true });
   assert.equal(s.color, "blue");
+  assert.equal(s.hands.p1.length, count);
+  assert.equal(s.pendingPenalty.amount, 4);
+  assert.equal(s.turn, "p1");
+  uno.act(s, "p1", { type: "draw" });
   assert.equal(s.hands.p1.length, count + 4);
   assert.equal(s.turn, "p2");
 });
@@ -44,9 +48,14 @@ test("UNO skip, reverse and draw-two skip the correct player", () => {
     s.hands.p0[0].value = value;
     const before = s.hands.p1.length;
     uno.act(s, "p0", { type: "play", cardId: "r" });
-    assert.equal(s.turn, "p2");
+    assert.equal(s.turn, value === "+2" ? "p1" : "p2");
     if (value === "reverse") assert.equal(s.direction, -1);
-    if (value === "+2") assert.equal(s.hands.p1.length, before + 2);
+    if (value === "+2") {
+      assert.equal(s.pendingPenalty.amount, 2);
+      uno.act(s, "p1", { type: "draw" });
+      assert.equal(s.hands.p1.length, before + 2);
+      assert.equal(s.turn, "p2");
+    }
   }
 });
 test("UNO two-player reverse returns the turn", () => {
