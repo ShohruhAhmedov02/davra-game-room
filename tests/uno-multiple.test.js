@@ -17,7 +17,7 @@ test('Invalid multi-card moves are rejected atomically',()=>{
  for(const ids of [['b','r'],['r','x'],['r','r'],['r','missing'],[],null,'r']){
   const s=state(),before=JSON.stringify(s);assert.throws(()=>uno.act(s,'a',{type:'play',cardIds:ids}));assert.equal(JSON.stringify(s),before);
  }
- const s=state();s.hands.a=[c('one','red','+2'),c('two','blue','+2')];const before=s.hands.b.length;uno.act(s,'a',{type:'play',cardIds:['one','two']});assert.equal(s.hands.b.length,before+2);assert.equal(s.turn,'c');
+ const s=state();s.hands.a=[c('one','red','+2'),c('two','blue','+2')];const before=s.hands.b.length;uno.act(s,'a',{type:'play',cardIds:['one','two']});assert.equal(s.hands.b.length,before);assert.equal(s.pendingPenalty.amount,2);assert.equal(s.turn,'b');
 });
 test('After drawing, the drawn number can be combined with matching cards',()=>{
  const s=state();s.drawn='r';uno.act(s,'a',{type:'play',cardIds:['r','b','g'],uno:true});
