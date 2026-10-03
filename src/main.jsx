@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { io } from "socket.io-client";
 import "./styles.css";
 const socket = io({ autoConnect: false, auth: { token: localStorage.getItem("davra-token") } });
-const catalog = { uno: { name: "UNO", eyebrow: "RANGLAR JANGI", tag: "2+ · chegara yo‘q", description: "Rangni moslang. Navbatni o‘zgartiring. Oxirgi kartaga yeting.", icon: "◈" }, durak: { name: "6 karta", eyebrow: "PODKIDNOY DURAK", tag: "2–6 o‘yinchi", description: "Hujum, himoya va ozgina ayyorlik. Kartasiz qolgan yutadi.", icon: "♠" }, mafia: { name: "Mafia", eyebrow: "KIMGA ISHONASIZ?", tag: "5–12 o‘yinchi", description: "Tun sirlarni yashiradi. Kunduz esa hamma shubha ostida.", icon: "◐" } };
+const catalog = { uno: { name: "UNO", eyebrow: "RANGLAR JANGI", tag: "2+ · chegara yo‘q", description: "Rangni moslang. Navbatni o‘zgartiring. Oxirgi kartaga yeting.", icon: "◈" }, durak: { name: "6 karta", eyebrow: "PODKIDNOY DURAK", tag: "2–6 o‘yinchi", description: "Hujum, himoya va ozgina ayyorlik. Kartasiz qolgan yutadi.", icon: "♠" }, mafia: { name: "Mafia", eyebrow: "KIMGA ISHONASIZ?", tag: "4–20 o‘yinchi", description: "Tun sirlarni yashiradi. Kunduz esa hamma shubha ostida.", icon: "◐" } };
 const roles = { mafia: "Mafia", doctor: "Doktor", commissioner: "Komissar", civilian: "Tinch aholi" };
 const roleInfo = { mafia: "Tunda sheriklaringiz bilan nishon tanlang. Kunduz shubhalarni chetga buring.", doctor: "Har tunda bir o‘yinchini qutqaring. O‘zingizni ham tanlashingiz mumkin.", commissioner: "Har tunda bir o‘yinchini tekshiring. Natija faqat sizga ko‘rinadi.", civilian: "Kunduz suhbatni kuzating va ovoz berib Mafiani toping." };
 const colorNames = { red: "Qizil", yellow: "Sariq", green: "Yashil", blue: "Ko‘k" };
