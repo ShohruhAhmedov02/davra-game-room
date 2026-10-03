@@ -52,9 +52,12 @@ test('Wild +4 and UNO penalties still deal every card when the pile is exhausted
  const sameColor=s.hands.p0.filter(c=>c.color===s.color);
  s.hands.p0=s.hands.p0.filter(c=>c.color!==s.color);s.hands.p2.push(...sameColor);
  s.hands.p0.push(wild);
- const before=s.hands.p1.length;
- uno.act(s,'p0',{type:'play',cardId:wild.id,color:'blue'});
- assert.equal(s.hands.p1.length,before+4);
+  const before=s.hands.p1.length;
+  uno.act(s,'p0',{type:'play',cardId:wild.id,color:'blue'});
+  assert.equal(s.hands.p1.length,before);
+  assert.equal(s.pendingPenalty.amount,4);
+  uno.act(s,'p1',{type:'draw'});
+  assert.equal(s.hands.p1.length,before+4);
  assert.equal(all(s).length,s.nextDeckSet*108);
  s.hands.p2.push(...s.deck);s.deck=[];
  s.unoPending='p1';uno.act(s,'p0',{type:'catch'});
