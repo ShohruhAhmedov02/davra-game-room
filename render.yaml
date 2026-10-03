@@ -1,0 +1,17 @@
+# Publish this folder as the repository root. One instance owns all game rooms.
+services:
+  - type: web
+    name: davra-game-room
+    runtime: node
+    plan: free
+    buildCommand: npx --yes pnpm@11.19.0 install --frozen-lockfile --prod=false && npx --yes pnpm@11.19.0 run build
+    startCommand: node server/index.js
+    healthCheckPath: /api/health
+    autoDeployTrigger: off
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
