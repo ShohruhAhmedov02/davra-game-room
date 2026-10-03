@@ -433,6 +433,13 @@ main {
   font-size: 9px;
   letter-spacing: 0;
 }
+.home-settings {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
 .difficulty {
   font-size: 10px;
   color: #919daa;
@@ -879,6 +886,24 @@ footer button {
   font-size: 9px;
   color: #a2afbb;
   margin-top: 5px;
+}
+.opponent .card-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  color: #d6f5a0;
+  background: #2d3b2d;
+  border: 1px solid #536b43;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.opponent .card-count span {
+  font-size: 13px;
+  line-height: 1;
 }
 .opponent .avatar {
   height: 32px;
@@ -1748,6 +1773,16 @@ footer button {
   }
   .section-title h2 {
     font-size: 14px;
+  }
+  .section-title:has(.home-settings) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .home-settings {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
   }
   .difficulty {
     font-size: 9px;
