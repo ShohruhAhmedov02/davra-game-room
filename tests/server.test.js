@@ -92,3 +92,25 @@ test("Room validation and limits reject malformed requests without stopping serv
   assert.equal((await fetch(`${url}/api/health`)).status, 200);
 });
 
+test("UNO and Durak room chat is shared, bounded, and disabled for Mafia rooms", async (t) => {
+  const server = createGameServer();
+  await new Promise((r) => server.http.listen(0, "127.0.0.1", r));
+  const url = `http://127.0.0.1:${server.http.address().port}`, a = await connect(url), b = await connect(url);
+  t.after(async () => { a.disconnect(); b.disconnect(); await server.close(); });
+  assert.equal((await emit(a, "room:create", { name: "Ali", game: "uno" })).ok, true);
+  await until(() => a.room);
+  assert.equal((await emit(b, "room:join", { name: "Vali", code: a.room.code })).ok, true);
+  await until(() => b.room?.players.length === 2);
+  assert.equal((await emit(a, "room:chat", { text: "  Salom, davra!  " })).ok, true);
+  await until(() => a.room?.chat.length === 1 && b.room?.chat.length === 1);
+  assert.deepEqual(a.room.chat[0], b.room.chat[0]);
+  assert.equal(a.room.chat[0].name, "Ali");
+  assert.equal(a.room.chat[0].text, "Salom, davra!");
+  assert.equal((await emit(a, "room:chat", { text: "  " })).ok, false);
+  assert.equal((await emit(a, "room:chat", { text: "x".repeat(281) })).ok, false);
+  assert.equal((await emit(a, "room:leave")).ok, true);
+  await until(() => a.room === null);
+  assert.equal((await emit(a, "room:create", { name: "Ali", game: "mafia" })).ok, true);
+  assert.equal((await emit(a, "room:chat", { text: "Tunda gaplashamiz" })).ok, false);
+});
+
