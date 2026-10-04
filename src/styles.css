@@ -1090,6 +1090,36 @@ footer button {
   gap: 9px;
   flex-wrap: wrap;
 }
+.group-size-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px;
+  border: 1px solid #3b4653;
+  border-radius: 10px;
+  background: #1a2029;
+}
+.group-size-control > span {
+  color: #b4bfca;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.group-size {
+  min-width: 42px;
+  padding: 7px 9px;
+  border: 1px solid #465344;
+  border-radius: 7px;
+  background: #2b352b;
+  color: #d6f5a0;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.group-size.active {
+  background: var(--lime);
+  border-color: var(--lime);
+  color: #192318;
+}
 .uno-button {
   background: #d45355;
   border-color: #ed7374;
@@ -1901,6 +1931,10 @@ footer button {
   .game-actions {
     width: 100%;
     justify-content: flex-end;
+  }
+  .group-size-control {
+    max-width: 100%;
+    overflow-x: auto;
   }
   .game-actions .btn {
     font-size: 10px;
