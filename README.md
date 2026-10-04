@@ -38,6 +38,8 @@ Frontend: **http://localhost:5173**, backend: **http://localhost:3001**. Vite `/
 4. Xona egasi istasa AI botlar qo‘shadi, so‘ng o‘yinni boshlaydi.
 5. **AI bilan o‘ynash** UNO/Durakda 2 bot, Mafiada 5 bot bilan darhol partiya boshlaydi.
 
+UNO va Durak xonalarida o‘yinchilar 280 belgigacha bo‘lgan xabarlarni umumiy chatga yuborishi mumkin; oxirgi 80 xabar saqlanadi. Mafiyada mavjud suhbat kunduzgi muhokama bilan cheklangan.
+
 Bir xil Wi-Fi tarmog‘idagi telefonlar kompyuterning mahalliy IP manziliga, masalan `http://192.168.1.10:3001` orqali kirishi mumkin. Windows Firewall Node.js uchun xususiy tarmoqdan kirishga ruxsat berishi kerak. `localhost` boshqa telefon yoki kompyuterdan sizning serveringizga olib bormaydi.
 
 Bir brauzer profilida bitta o‘yinchi sessiyasi saqlanadi. Ikki odamni bitta kompyuterda sinash uchun boshqa brauzer yoki inkognito oyna ishlating. Ikkinchi oddiy tab shu profil sessiyasini ko‘chiradi va oldingi tabni uzadi. Sahifa yangilansa yoki tarmoq qaytsa, mavjud token orqali o‘yinchining joyi va kartalari tiklanadi.
