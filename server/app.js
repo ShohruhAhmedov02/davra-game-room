@@ -28,7 +28,7 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
   app.use(express.static(publicDir));
   app.get("/", (_, res) => res.sendFile(`${publicDir}/index.html`));
   function snapshot(room, id) {
-    return { code: room.code, game: room.game, host: room.host, status: room.status, you: id, max: Number.isFinite(games[room.game].max) ? games[room.game].max : null, botThinkMs: room.botThinkMs, startingCards: room.startingCards, min: games[room.game].min, players: room.players.map(({ id: id2, name, bot, level, connected }) => ({ id: id2, name, bot, level, connected })), state: room.state ? games[room.game].view(room.state, id) : null };
+    return { code: room.code, game: room.game, host: room.host, status: room.status, you: id, max: Number.isFinite(games[room.game].max) ? games[room.game].max : null, botThinkMs: room.botThinkMs, startingCards: room.startingCards, min: games[room.game].min, players: room.players.map(({ id: id2, name, bot, level, connected }) => ({ id: id2, name, bot, level, connected })), chat: room.chat || [], state: room.state ? games[room.game].view(room.state, id) : null };
   }
   function broadcast(room) {
     if (room.state) games[room.game].syncPlayers?.(room.state, room.players);
@@ -144,7 +144,7 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
       do {
         code = String(randomInt(1e5, 1e6));
       } while (rooms.has(code));
-      const r = { code, game: d.game, host: session.id, status: "waiting", players: [player(n)], state: null, lastBotAt: 0, botThinkMs: d.game === 'uno' ? 3000 : botDelay, startingCards: d.game === 'uno' ? 20 : null };
+      const r = { code, game: d.game, host: session.id, status: "waiting", players: [player(n)], state: null, chat: [], lastBotAt: 0, botThinkMs: d.game === 'uno' ? 3000 : botDelay, startingCards: d.game === 'uno' ? 20 : null };
       session.room = code;
       rooms.set(code, r);
       broadcast(r);
@@ -208,6 +208,18 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
     handle("room:leave", () => {
       detach(session, true);
       socket.emit("room", null);
+    });
+    handle("room:chat", (d) => {
+      const r = member();
+      assert(r.game !== "mafia", "Mafiyada suhbat faqat kunduzgi muhokama vaqtida ochiq.");
+      assert(r.status === "waiting" || r.status === "playing", "Xona yakunlangan.");
+      assert(typeof d.text === "string", "Xabar matni noto‘g‘ri.");
+      const text = d.text.trim();
+      assert(text.length > 0 && text.length <= 280, "Xabar 1–280 belgi bo‘lsin.");
+      const sender = r.players.find((p) => p.id === session.id);
+      r.chat.push({ id: randomUUID(), playerId: session.id, name: sender.name, text });
+      r.chat = r.chat.slice(-80);
+      broadcast(r);
     });
     handle("game:action", (d) => {
       const r = member();
