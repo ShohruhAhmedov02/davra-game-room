@@ -56,10 +56,9 @@ function ChatPanel({ room, messages, chat, setChat, disabled, onSend, run, count
     setChat("");
     setStickersOpen(false);
   });
-  const sendImage = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
+  const available = !disabled && (room.status === "waiting" || room.status === "playing");
+  const uploadImage = async (file) => {
+    if (!file || !available || uploading) return;
     setUploading(true);
     try {
       const image = await compressChatImage(file);
@@ -70,13 +69,25 @@ function ChatPanel({ room, messages, chat, setChat, disabled, onSend, run, count
       setUploading(false);
     }
   };
-  const available = !disabled && (room.status === "waiting" || room.status === "playing");
+  const sendImage = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    await uploadImage(file);
+  };
+  const pasteImage = (event) => {
+    const item = [...(event.clipboardData?.items || [])].find((entry) => entry.kind === "file" && entry.type.startsWith("image/"));
+    const file = item?.getAsFile();
+    if (!file) return;
+    event.preventDefault();
+    void uploadImage(file);
+  };
   return <section className={`panel chat-panel room-chat theme-${theme}`}>
     <div className="chat-heading"><div><h2>Davradagi suhbat</h2><p className="helper">{hint}</p></div><span className="tag">{count}</span></div>
     <label className="chat-theme">Chat mavzusi<select aria-label="Chat mavzusi" value={theme} onChange={(e) => setTheme(e.target.value)}>{Object.entries(chatThemes).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
     <div className="chat-messages" aria-live="polite" ref={messagesRef}>{!messages.length && <p className="muted">Hali xabar yo‘q. Birinchi bo‘lib yozing.</p>}{messages.map((m) => <div className={`chat-message ${m.system ? "system" : ""}`} key={m.id}><b>{m.name || "O‘yinchi"}</b>{m.text && <p>{m.text}</p>}{m.image && <a href={m.image} target="_blank" rel="noreferrer"><img className="chat-image" src={m.image} alt="Chatda yuborilgan rasm" loading="lazy" /></a>}{m.sticker && <div className="chat-sticker" role="img" aria-label="Stiker">{m.sticker}</div>}</div>)}</div>
     {stickersOpen && <div className="chat-stickers" aria-label="Stikerlar">{chatStickers.map((sticker) => <button key={sticker} type="button" disabled={!available} aria-label={`${sticker} stikerini yuborish`} onClick={() => submit({ sticker })}>{sticker}</button>)}</div>}
-    <form onSubmit={(e) => { e.preventDefault(); if (chat.trim()) submit({ text: chat }); }}>
+    <form onSubmit={(e) => { e.preventDefault(); if (chat.trim()) submit({ text: chat }); }} onPaste={pasteImage}>
       <input aria-label="Xabar" placeholder="Xabar yozing..." value={chat} maxLength={280} onChange={(e) => setChat(e.target.value)} disabled={!available || uploading} />
       <button className="btn chat-tool" type="button" title="Stikerlar" aria-label="Stikerlar" aria-expanded={stickersOpen} disabled={!available} onClick={() => setStickersOpen(!stickersOpen)}>☺</button>
       <button className="btn chat-tool" type="button" title="Rasm yuborish" aria-label="Rasm yuborish" disabled={!available || uploading} onClick={() => imageRef.current?.click()}>{uploading ? "…" : "▧"}</button>
@@ -251,4 +262,3 @@ function App() {
  </div>;
 }
 createRoot(document.getElementById("root")).render(<App />);
-
