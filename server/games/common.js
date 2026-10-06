@@ -10,6 +10,25 @@ export function shuffle(a) {
 export function assert(ok, message = "Bu amal hozir mumkin emas.") {
   if (!ok) throw new Error(message);
 }
+const CHAT_STICKERS = new Set(["❤️", "🫶", "😂", "🔥", "🎉", "👏", "🥰", "👀", "🤝", "✨", "😎", "💯"]);
+export function normalizeChatPayload(payload) {
+  assert(payload && typeof payload === "object", "Xabar noto‘g‘ri.");
+  const text = typeof payload.text === "string" ? payload.text.trim() : "";
+  const sticker = typeof payload.sticker === "string" && CHAT_STICKERS.has(payload.sticker) ? payload.sticker : "";
+  const image = typeof payload.image === "string" ? payload.image : "";
+  assert(text.length <= 280, "Xabar 280 belgidan oshmasin.");
+  assert(!payload.sticker || sticker, "Bu stiker mavjud emas.");
+  assert(!payload.image || (image.length <= 400_000 && /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image)), "Rasm hajmi yoki formati mos emas.");
+  assert(text || sticker || image, "Xabarga matn, rasm yoki stiker qo‘shing.");
+  assert(!(sticker && (text || image)), "Stikerni alohida yuboring.");
+  return { ...(text ? { text } : {}), ...(image ? { image } : {}), ...(sticker ? { sticker } : {}) };
+}
+export function roundWinners(game, state) {
+  if (game === "uno") return state.winner ? [state.winner] : [];
+  if (game === "durak") return state.loser ? state.order.filter((id) => id !== state.loser) : [];
+  if (game === "mafia") return state.winner ? state.order.filter((id) => state.alive[id] && (state.roles[id] === "mafia" ? "mafia" : "civilian") === state.winner) : [];
+  return [];
+}
 export const next = (s, id, step = 1) => s.order[(s.order.indexOf(id) + step + s.order.length * 10) % s.order.length];
 export function majority(values) {
   const counts = {};
