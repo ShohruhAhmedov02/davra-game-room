@@ -38,13 +38,13 @@ Frontend: **http://localhost:5173**, backend: **http://localhost:3001**. Vite `/
 4. Xona egasi istasa AI botlar qo‘shadi, so‘ng o‘yinni boshlaydi.
 5. **AI bilan o‘ynash** UNO/Durakda 2 bot, Mafiada 5 bot bilan darhol partiya boshlaydi.
 
-UNO va Durak xonalarida o‘yinchilar 280 belgigacha bo‘lgan xabarlarni umumiy chatga yuborishi mumkin; oxirgi 80 xabar saqlanadi. Mafiyada mavjud suhbat kunduzgi muhokama bilan cheklangan.
+UNO va Durak xonalarida, shuningdek Mafia kunduzgi muhokamasida 280 belgigacha xabar, stiker yoki rasm yuborish mumkin. Rasm chatga yuborishdan oldin siqiladi (tanlangan fayl 12 MB gacha); ruxsat etilgan stikerlar ro‘yxati serverda tekshiriladi. Yangi xabar kelganda chat oxiriga avtomatik tushadi. Chat mavzusi har bir brauzerda alohida saqlanadi: Klassik, Sevgi, Do‘stlik, Quyosh botishi yoki Okean. UNO/Durakda oxirgi 80, Mafiada oxirgi 60 xabar saqlanadi; Mafia chatiga faqat tirik o‘yinchilar kunduz yozishi mumkin.
 
 Bir xil Wi-Fi tarmog‘idagi telefonlar kompyuterning mahalliy IP manziliga, masalan `http://192.168.1.10:3001` orqali kirishi mumkin. Windows Firewall Node.js uchun xususiy tarmoqdan kirishga ruxsat berishi kerak. `localhost` boshqa telefon yoki kompyuterdan sizning serveringizga olib bormaydi.
 
 Bir brauzer profilida bitta o‘yinchi sessiyasi saqlanadi. Ikki odamni bitta kompyuterda sinash uchun boshqa brauzer yoki inkognito oyna ishlating. Ikkinchi oddiy tab shu profil sessiyasini ko‘chiradi va oldingi tabni uzadi. Sahifa yangilansa yoki tarmoq qaytsa, mavjud token orqali o‘yinchining joyi va kartalari tiklanadi.
 
-## Tayyor funksiyalar
+Umumiy natijalar jadvali raundlar bo‘yicha g‘alabalarni yig‘ib, lobbyda va o‘yin paytida ko‘rsatadi. UNOda raund g‘olibi, Durakda Durak bo‘lmaganlar, Mafiada g‘olib jamoada tirik qolganlar hisob oladi. Durakdagi durang hech kimga g‘alaba qo‘shmaydi. Xona egasi o‘yin ketayotgan paytda ham **Qayta boshlash** tugmasini bosib, tasdiqlagach xonani lobbyga qaytara oladi; umumiy g‘alabalar saqlanadi.\n\n## Tayyor funksiyalar
 
 - Umumiy lobby: nickname, tasodifiy 6 xonali xona kodi, qo‘shilish, host, bot qo‘shish/olib tashlash, boshlash, yakunda qayta o‘ynash.
 - Odamlar, AI botlar yoki ularning aralashmasi bir xil qoidalar orqali o‘ynaydi.
