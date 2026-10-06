@@ -1,4 +1,4 @@
-import { assert, shuffle, majority, pick } from "./common.js";
+import { assert, shuffle, majority, pick, normalizeChatPayload } from "./common.js";
 const alive = (s) => s.order.filter((id) => s.alive[id]);
 function check(s) {
   const m = alive(s).filter((id) => s.roles[id] === "mafia").length, c = alive(s).length - m;
@@ -70,8 +70,7 @@ export const mafia = {
     assert(!s.winner && s.alive[id], "Siz bu bosqichda qatnasha olmaysiz.");
     if (a.type === "chat") {
       assert(s.phase === "discussion", "Suhbat faqat kunduz ochiq.");
-      assert(typeof a.text === "string" && a.text.trim().length > 0 && a.text.length <= 280);
-      s.chat.push({ id: `${Date.now()}-${id}-${s.chat.length}`, playerId: id, text: a.text.trim() });
+      s.chat.push({ id: `${Date.now()}-${id}-${s.chat.length}`, playerId: id, ...normalizeChatPayload(a) });
       s.chat = s.chat.slice(-60);
       return;
     }
