@@ -3,8 +3,16 @@ import assert from "node:assert/strict";
 import { uno, colors } from "../server/games/uno.js";
 import { durak, beats } from "../server/games/durak.js";
 import { mafia } from "../server/games/mafia.js";
+import { roundWinners } from "../server/games/common.js";
 const players = (n) => Array.from({ length: n }, (_, i) => ({ id: `p${i}`, name: `Player ${i}` }));
 const card = (id, color, value) => ({ id, color, value });
+test("overall wins follow each game's round result", () => {
+  assert.deepEqual(roundWinners("uno", { winner: "p1" }), ["p1"]);
+  assert.deepEqual(roundWinners("durak", { order: ["p1", "p2", "p3"], loser: "p2" }), ["p1", "p3"]);
+  assert.deepEqual(roundWinners("durak", { order: ["p1", "p2"], loser: null }), []);
+  assert.deepEqual(roundWinners("mafia", { winner: "mafia", order: ["p1", "p2", "p3"], alive: { p1: true, p2: false, p3: true }, roles: { p1: "mafia", p2: "mafia", p3: "civilian" } }), ["p1"]);
+  assert.deepEqual(roundWinners("mafia", { winner: "civilian", order: ["p1", "p2"], alive: { p1: true, p2: false }, roles: { p1: "civilian", p2: "mafia" } }), ["p1"]);
+});
 function unoState() {
   const s = uno.create(players(3));
   s.turn = "p0";
@@ -196,6 +204,17 @@ test("Mafia doctor saves target and commissioner gets private intel", () => {
   assert.equal(s.alive.p3, true);
   assert.equal(mafia.view(s, "p2").intel.p0, "mafia");
   assert.deepEqual(mafia.view(s, "p1").intel, {});
+});
+test("Mafia daytime chat accepts stickers and compressed images but validates their payload", () => {
+  const s = mafia.create(players(5));
+  s.phase = "discussion";
+  mafia.act(s, "p0", { type: "chat", sticker: "❤️" });
+  mafia.act(s, "p1", { type: "chat", image: "data:image/jpeg;base64,QUJD", text: "Salom" });
+  assert.equal(s.chat[0].sticker, "❤️");
+  assert.equal(s.chat[1].image, "data:image/jpeg;base64,QUJD");
+  assert.equal(s.chat[1].text, "Salom");
+  assert.throws(() => mafia.act(s, "p2", { type: "chat", image: "https://example.com/a.jpg" }));
+  assert.throws(() => mafia.act(s, "p3", { type: "chat", sticker: "<script>" }));
 });
 test("Mafia voting eliminates mafia and ends game", () => {
   const s = mafia.create(players(5));
