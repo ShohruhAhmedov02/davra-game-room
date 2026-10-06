@@ -4,11 +4,11 @@ import { randomBytes, randomInt, randomUUID } from "node:crypto";
 import { Server } from "socket.io";
 import { fileURLToPath } from "node:url";
 import { games } from "./games/index.js";
-import { assert } from "./games/common.js";
+import { assert, normalizeChatPayload, roundWinners } from "./games/common.js";
 export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowedOrigins = [] } = {}) {
   const app = express(), http = createServer(app);
   const rooms = /* @__PURE__ */ new Map(), sessions = /* @__PURE__ */ new Map();
-  const io = new Server(http, { maxHttpBufferSize: 16384, allowRequest: (req, done) => {
+  const io = new Server(http, { maxHttpBufferSize: 512_000, allowRequest: (req, done) => {
     const origin = req.headers.origin;
     let same = false;
     try {
@@ -28,11 +28,15 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
   app.use(express.static(publicDir));
   app.get("/", (_, res) => res.sendFile(`${publicDir}/index.html`));
   function snapshot(room, id) {
-    return { code: room.code, game: room.game, host: room.host, status: room.status, you: id, max: Number.isFinite(games[room.game].max) ? games[room.game].max : null, botThinkMs: room.botThinkMs, startingCards: room.startingCards, min: games[room.game].min, players: room.players.map(({ id: id2, name, bot, level, connected }) => ({ id: id2, name, bot, level, connected })), chat: room.chat || [], state: room.state ? games[room.game].view(room.state, id) : null };
+    return { code: room.code, game: room.game, host: room.host, status: room.status, you: id, max: Number.isFinite(games[room.game].max) ? games[room.game].max : null, botThinkMs: room.botThinkMs, startingCards: room.startingCards, min: games[room.game].min, rounds: room.rounds || 0, players: room.players.map(({ id: id2, name, bot, level, connected }) => ({ id: id2, name, bot, level, connected, wins: room.wins?.[id2] || 0 })), chat: room.chat || [], state: room.state ? games[room.game].view(room.state, id) : null };
   }
   function broadcast(room) {
     if (room.state) games[room.game].syncPlayers?.(room.state, room.players);
-    if (room.state && (room.state.winner || room.state.over)) room.status = "finished";
+    if (room.state && (room.state.winner || room.state.over) && room.status === "playing") {
+      room.status = "finished";
+      room.rounds = (room.rounds || 0) + 1;
+      for (const winnerId of roundWinners(room.game, room.state)) room.wins[winnerId] = (room.wins[winnerId] || 0) + 1;
+    }
     for (const p of room.players) {
       const socket = io.sockets.sockets.get(p.socketId);
       if (socket) socket.emit("room", snapshot(room, p.id));
@@ -144,7 +148,7 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
       do {
         code = String(randomInt(1e5, 1e6));
       } while (rooms.has(code));
-      const r = { code, game: d.game, host: session.id, status: "waiting", players: [player(n)], state: null, chat: [], lastBotAt: 0, botThinkMs: d.game === 'uno' ? 3000 : botDelay, startingCards: d.game === 'uno' ? 20 : null };
+      const r = { code, game: d.game, host: session.id, status: "waiting", players: [player(n)], state: null, chat: [], lastBotAt: 0, botThinkMs: d.game === 'uno' ? 3000 : botDelay, startingCards: d.game === 'uno' ? 20 : null, wins: {}, rounds: 0 };
       session.room = code;
       rooms.set(code, r);
       broadcast(r);
@@ -200,7 +204,7 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
     });
     handle("room:reset", () => {
       const r = host();
-      assert(r.status === "finished", "O‘yin hali tugamadi.");
+      assert(r.status === "playing" || r.status === "finished", "O‘yin hali boshlanmadi.");
       r.status = "waiting";
       r.state = null;
       broadcast(r);
@@ -213,11 +217,9 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
       const r = member();
       assert(r.game !== "mafia", "Mafiyada suhbat faqat kunduzgi muhokama vaqtida ochiq.");
       assert(r.status === "waiting" || r.status === "playing", "Xona yakunlangan.");
-      assert(typeof d.text === "string", "Xabar matni noto‘g‘ri.");
-      const text = d.text.trim();
-      assert(text.length > 0 && text.length <= 280, "Xabar 1–280 belgi bo‘lsin.");
+      const content = normalizeChatPayload(d);
       const sender = r.players.find((p) => p.id === session.id);
-      r.chat.push({ id: randomUUID(), playerId: session.id, name: sender.name, text });
+      r.chat.push({ id: randomUUID(), playerId: session.id, name: sender.name, ...content });
       r.chat = r.chat.slice(-80);
       broadcast(r);
     });
