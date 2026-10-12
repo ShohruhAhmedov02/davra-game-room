@@ -32,14 +32,17 @@ test("UNO deck has 108 unique cards and private hand views", () => {
   assert.equal(view.deck, void 0);
   assert.equal(view.hand, s.hands.p0);
 });
-test("UNO validates turn, ownership, color and +4 restrictions", () => {
+test("UNO validates turn and ownership; Wild and +4 work on any color", () => {
   const s = unoState();
   assert.throws(() => uno.act(s, "p1", { type: "play", cardId: "r" }));
   assert.throws(() => uno.act(s, "p0", { type: "play", cardId: "b" }));
-  assert.throws(() => uno.act(s, "p0", { type: "play", cardId: "w", color: "blue" }));
-  assert.equal(s.hands.p0.length, 3);
-  s.hands.p0 = s.hands.p0.filter((c) => c.id !== "r");
   assert.throws(() => uno.act(s, "p0", { type: "play", cardId: "w", color: "invalid" }));
+  s.hands.p0.push(card("wild", "wild", "wild"));
+  assert.doesNotThrow(() => uno.act(s, "p0", { type: "play", cardId: "wild", color: "green" }));
+  assert.equal(s.color, "green");
+  s.turn = "p0";
+  s.color = "red";
+  s.discard = [card("top", "red", "5")];
   const count = s.hands.p1.length;
   uno.act(s, "p0", { type: "play", cardId: "w", color: "blue", uno: true });
   assert.equal(s.color, "blue");
@@ -264,4 +267,3 @@ for (const [name, game, n] of [["UNO", uno, 8], ["Durak", durak, 6], ["Mafia", m
     assert.ok(s.winner || s.over, `${name} exceeded move limit`);
   }
 });
-
