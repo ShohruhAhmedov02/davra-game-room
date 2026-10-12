@@ -26,7 +26,7 @@ function draw(s, id, count = 1) {
 export function legal(s, id, card) {
   if (!card) return false;
   if (s.pendingPenalty) return card.value === s.pendingPenalty.value;
-  if (card.value === "+4") return !s.hands[id].some((c) => c.color === s.color);
+  if (card.value === "+4") return true;
   return card.color === "wild" || card.color === s.color || card.value === s.discard.at(-1).value;
 }
 function nextActive(s, id, steps = 1) {
@@ -189,4 +189,3 @@ export const uno = {
     return { type: "play", cardId: c.id, color, uno: true };
   }
 };
-
