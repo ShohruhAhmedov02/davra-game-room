@@ -28,7 +28,7 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
   app.use(express.static(publicDir));
   app.get("/", (_, res) => res.sendFile(`${publicDir}/index.html`));
   function snapshot(room, id) {
-    return { code: room.code, game: room.game, host: room.host, status: room.status, you: id, max: Number.isFinite(games[room.game].max) ? games[room.game].max : null, botThinkMs: room.botThinkMs, startingCards: room.startingCards, min: games[room.game].min, rounds: room.rounds || 0, players: room.players.map(({ id: id2, name, bot, level, connected }) => ({ id: id2, name, bot, level, connected, wins: room.wins?.[id2] || 0 })), chat: room.chat || [], state: room.state ? games[room.game].view(room.state, id) : null };
+    return { code: room.code, game: room.game, host: room.host, status: room.status, you: id, max: Number.isFinite(games[room.game].max) ? games[room.game].max : null, botThinkMs: room.botThinkMs, startingCards: room.startingCards, min: games[room.game].min, rounds: room.rounds || 0, players: room.players.map(({ id: id2, name, bot, level, connected }) => ({ id: id2, name, bot, level, connected, wins: room.wins?.[id2] || 0 })), voice: room.voice || {}, chat: room.chat || [], state: room.state ? games[room.game].view(room.state, id) : null };
   }
   function broadcast(room) {
     if (room.state) games[room.game].syncPlayers?.(room.state, room.players);
@@ -49,6 +49,7 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
       return;
     }
     const p = room.players.find((p2) => p2.id === session.id);
+    if (room.voice) delete room.voice[session.id];
     if (p) {
       p.connected = false;
       p.socketId = null;
@@ -148,7 +149,7 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
       do {
         code = String(randomInt(1e5, 1e6));
       } while (rooms.has(code));
-      const r = { code, game: d.game, host: session.id, status: "waiting", players: [player(n)], state: null, chat: [], lastBotAt: 0, botThinkMs: d.game === 'uno' ? 3000 : botDelay, startingCards: d.game === 'uno' ? 20 : null, wins: {}, rounds: 0 };
+      const r = { code, game: d.game, host: session.id, status: "waiting", players: [player(n)], state: null, chat: [], voice: {}, wins: {}, rounds: 0, lastBotAt: 0, botThinkMs: d.game === 'uno' ? 3000 : botDelay, startingCards: d.game === 'uno' ? 20 : null };
       session.room = code;
       rooms.set(code, r);
       broadcast(r);
@@ -222,6 +223,30 @@ export function createGameServer({ botDelay = 900, disconnectGrace = 3e4, allowe
       r.chat.push({ id: randomUUID(), playerId: session.id, name: sender.name, ...content });
       r.chat = r.chat.slice(-80);
       broadcast(r);
+    });
+    handle("room:voice", (d) => {
+      const r = member();
+      assert(typeof d.enabled === "boolean", "Ovozli chat sozlamasi noto‘g‘ri.");
+      if (d.enabled) {
+        assert(r.game !== "mafia" || r.status !== "playing" || r.state?.phase === "discussion", "Mafiyada ovoz faqat kunduzgi muhokamada ishlaydi.");
+        const active = Object.keys(r.voice || {}).length;
+        assert(r.voice?.[session.id] || active < 8, "Ovozli chatda bir vaqtda 8 kishi qatnashishi mumkin.");
+        r.voice ||= {};
+        r.voice[session.id] = true;
+      } else if (r.voice) delete r.voice[session.id];
+      broadcast(r);
+    });
+    handle("room:voice:signal", (d) => {
+      const r = member();
+      assert(r.voice?.[session.id], "Ovozli chatga avval qo‘shiling.");
+      assert(typeof d.to === "string" && d.to !== session.id, "Ovozli chat manzili noto‘g‘ri.");
+      assert(["offer", "answer", "ice"].includes(d.type), "Ovozli chat signali noto‘g‘ri.");
+      assert(d.payload && typeof d.payload === "object" && !Array.isArray(d.payload), "Ovozli chat signali noto‘g‘ri.");
+      assert(JSON.stringify(d.payload).length <= 20_000, "Ovozli chat signali juda katta.");
+      assert(r.voice?.[d.to], "Bu o‘yinchi ovozli chatda yo‘q.");
+      const recipient = r.players.find((p) => p.id === d.to && !p.bot && p.connected);
+      assert(recipient?.socketId, "O‘yinchi hozir ulanmagan.");
+      io.to(recipient.socketId).emit("room:voice:signal", { from: session.id, type: d.type, payload: d.payload });
     });
     handle("game:action", (d) => {
       const r = member();
