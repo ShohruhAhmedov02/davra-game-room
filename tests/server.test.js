@@ -134,3 +134,24 @@ test("UNO and Durak room chat is shared, bounded, and disabled for Mafia rooms",
   assert.equal((await emit(a, "room:chat", { text: "Tunda gaplashamiz" })).ok, false);
 });
 
+test("voice chat is room-scoped and relays signaling only between joined listeners", async (t) => {
+  const server = createGameServer();
+  await new Promise((r) => server.http.listen(0, "127.0.0.1", r));
+  const url = `http://127.0.0.1:${server.http.address().port}`, a = await connect(url), b = await connect(url), outsider = await connect(url);
+  t.after(async () => { a.disconnect(); b.disconnect(); outsider.disconnect(); await server.close(); });
+  await emit(a, "room:create", { name: "Ali", game: "uno" });
+  await until(() => a.room);
+  await emit(b, "room:join", { name: "Vali", code: a.room.code });
+  await until(() => b.room?.players.length === 2);
+  assert.equal((await emit(a, "room:voice:signal", { to: b.identity.id, type: "offer", payload: { type: "offer", sdp: "test" } })).ok, false);
+  assert.equal((await emit(a, "room:voice", { enabled: true })).ok, true);
+  assert.equal((await emit(b, "room:voice", { enabled: true })).ok, true);
+  await until(() => a.room?.voice?.[b.identity.id] && b.room?.voice?.[a.identity.id]);
+  const received = new Promise((resolve) => b.once("room:voice:signal", resolve));
+  assert.equal((await emit(a, "room:voice:signal", { to: b.identity.id, type: "offer", payload: { type: "offer", sdp: "test" } })).ok, true);
+  assert.deepEqual(await received, { from: a.identity.id, type: "offer", payload: { type: "offer", sdp: "test" } });
+  assert.equal((await emit(a, "room:voice", { enabled: false })).ok, true);
+  await until(() => !b.room?.voice?.[a.identity.id]);
+  assert.equal((await emit(b, "room:voice:signal", { to: a.identity.id, type: "ice", payload: { candidate: "test" } })).ok, false);
+});
+
