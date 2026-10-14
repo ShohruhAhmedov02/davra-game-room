@@ -40,6 +40,8 @@ Frontend: **http://localhost:5173**, backend: **http://localhost:3001**. Vite `/
 
 Yangi xabar kelganda chat oxiriga avtomatik tushadi. Chat mavzusi har bir brauzerda alohida saqlanadi: Klassik, Sevgi, Do‘stlik, Quyosh botishi yoki Okean. UNO/Durakda oxirgi 80, Mafiada oxirgi 60 xabar saqlanadi; Mafia chatiga faqat tirik o‘yinchilar kunduz yozishi mumkin.
 
+Har bir xona, jumladan UNO, Durak va Mafiada **ovozli chat** tugmasi bor. Foydalanuvchi tugmani bosib mikrofon ruxsatini bergandagina ulanadi; mikrofonni alohida o‘chirish yoki chatdan chiqish mumkin. Ovoz brauzerlar o‘rtasida WebRTC orqali bevosita uzatiladi, server faqat ulanish signallarini yo‘naltiradi. Bir xonada bir vaqtda 8 tagacha odam ovozda qatnashadi. Sayt boshqa qurilmada ochilganda mikrofon uchun HTTPS va brauzer ruxsati kerak. Ayrim qattiq cheklangan tarmoqlarda qo‘shimcha TURN relay serveri talab qilinishi mumkin. Mafiada interfeys mikrofonni tun va ovoz berish paytida avtomatik o‘chirib, kunduzgi muhokamada yoqadi.
+
 Umumiy natijalar jadvali raundlar bo‘yicha g‘alabalarni yig‘ib, lobbyda va o‘yin paytida ko‘rsatadi. UNOda raund g‘olibi, Durakda Durak bo‘lmaganlar, Mafiada g‘olib jamoada tirik qolganlar hisob oladi. Durakdagi durang hech kimga g‘alaba qo‘shmaydi. Xona egasi o‘yin ketayotgan paytda ham **Qayta boshlash** tugmasini bosib, tasdiqlagach xonani lobbyga qaytara oladi; umumiy g‘alabalar saqlanadi.
 
 Bir xil Wi-Fi tarmog‘idagi telefonlar kompyuterning mahalliy IP manziliga, masalan `http://192.168.1.10:3001` orqali kirishi mumkin. Windows Firewall Node.js uchun xususiy tarmoqdan kirishga ruxsat berishi kerak. `localhost` boshqa telefon yoki kompyuterdan sizning serveringizga olib bormaydi.
@@ -134,3 +136,4 @@ Bu **bir Node.js jarayonli MVP**. Xonalar va sessiyalar RAMda; bepul servis uzoq
 WebSocket qo‘llaydigan Node.js hostingda build buyrug‘i `npm install && npm run build`, start `npm start`. `PORT` hosting tomonidan berilishi mumkin, `HOST` standart `0.0.0.0`. Bitta domen orqali frontend/backend tavsiya etiladi. Boshqa frontend origin ishlatsangiz `ALLOWED_ORIGINS=https://example.com` kabi aniq ro‘yxat va mijoz manzilini sozlang. `.env.example` namunasi bor; `.env` fayli avtomatik o‘qilmaydi, muhit o‘zgaruvchilarini hostingda belgilang yoki `node --env-file=.env server/index.js` ishlating.
 
 HTTPS/WSS, reverse proxy WebSocket upgrade va uzoq ulanishlarni qo‘llashi kerak. Static-only hosting Node.js backendni ishga tushirmaydi. Keng ommaga ochishdan oldin sessiyalar/xonalar uchun doimiy saqlash, IP darajasida limit, monitoring, yuklama testi va bir nechta server uchun Redis adapter qo‘shing. Hozir socket boshiga 15 amal/soniya, 16 KB so‘rov, 500 xona va 5000 sessiya limiti mavjud; bu to‘liq DDoS himoyasi emas.
+
