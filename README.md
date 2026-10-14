@@ -131,7 +131,7 @@ Testlar maxsus kartalar, noto‘g‘ri yurishlar, karta maxfiyligi, qayta aralas
 
 Jonli manzil: **https://davra-game-room.onrender.com**. Render Web Service mavjud React + Node.js + Socket.IO arxitekturasini bir HTTPS manzilda ishga tushiradi. GitHub repository: https://github.com/ShohruhAhmedov02/davra-game-room.
 
-Bu **bir Node.js jarayonli MVP**. Xonalar va sessiyalar RAMda; bepul servis uzoq vaqt ishlatilmasa uxlaydi yoki qayta ishga tushsa ma’lumotlar yo‘qoladi. DB, akkaunt, matchmaking, reyting, audio/video chat va Redis klasteri hozir yo‘q. `render.yaml` va [DEPLOY.md](DEPLOY.md) keyingi deploylar uchun kiritilgan.
+Bu **bir Node.js jarayonli MVP**. Xonalar va sessiyalar RAMda; bepul servis uzoq vaqt ishlatilmasa uxlaydi yoki qayta ishga tushsa ma’lumotlar yo‘qoladi. DB, akkaunt, matchmaking, reyting, video chat va Redis klasteri hozir yo‘q. `render.yaml` va [DEPLOY.md](DEPLOY.md) keyingi deploylar uchun kiritilgan.
 
 WebSocket qo‘llaydigan Node.js hostingda build buyrug‘i `npm install && npm run build`, start `npm start`. `PORT` hosting tomonidan berilishi mumkin, `HOST` standart `0.0.0.0`. Bitta domen orqali frontend/backend tavsiya etiladi. Boshqa frontend origin ishlatsangiz `ALLOWED_ORIGINS=https://example.com` kabi aniq ro‘yxat va mijoz manzilini sozlang. `.env.example` namunasi bor; `.env` fayli avtomatik o‘qilmaydi, muhit o‘zgaruvchilarini hostingda belgilang yoki `node --env-file=.env server/index.js` ishlating.
 
