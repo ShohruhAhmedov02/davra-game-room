@@ -96,6 +96,108 @@ function ChatPanel({ room, messages, chat, setChat, disabled, onSend, run, count
     </form>
   </section>;
 }
+function VoiceChat({ room, me, send }) {
+  const [joined, setJoined] = useState(false), [muted, setMuted] = useState(false), [error, setError] = useState("");
+  const [remoteStreams, setRemoteStreams] = useState([]);
+  const localStream = useRef(null), peers = useRef(new Map()), pendingIce = useRef(new Map()), sendRef = useRef(send);
+  sendRef.current = send;
+  const allowed = room.game !== "mafia" || room.status !== "playing" || room.state?.phase === "discussion";
+  const voiceIds = Object.keys(room.voice || {}).filter((id) => id !== me && room.players.some((p) => p.id === id && p.connected && !p.bot));
+  const voiceKey = voiceIds.slice().sort().join(",");
+  const relay = (to, type, payload) => sendRef.current("room:voice:signal", { to, type, payload }).catch((e) => setError(e.message));
+  const createPeer = (id) => {
+    if (peers.current.has(id)) return peers.current.get(id);
+    const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+    peers.current.set(id, pc);
+    for (const track of localStream.current?.getTracks() || []) pc.addTrack(track, localStream.current);
+    pc.onicecandidate = (event) => { if (event.candidate) relay(id, "ice", event.candidate.toJSON()); };
+    pc.ontrack = (event) => {
+      const stream = event.streams[0];
+      if (stream) setRemoteStreams((old) => [...old.filter((entry) => entry.id !== id), { id, stream }]);
+    };
+    pc.onconnectionstatechange = () => {
+      if (["failed", "closed"].includes(pc.connectionState)) {
+        pc.close(); peers.current.delete(id);
+        setRemoteStreams((old) => old.filter((entry) => entry.id !== id));
+      }
+    };
+    return pc;
+  };
+  useEffect(() => {
+    const participants = new Set(voiceIds);
+    for (const id of peers.current.keys()) if (!joined || !participants.has(id)) {
+      peers.current.get(id)?.close(); peers.current.delete(id);
+      setRemoteStreams((old) => old.filter((entry) => entry.id !== id));
+    }
+    if (!joined) return;
+    for (const id of voiceIds) {
+      const pc = createPeer(id);
+      if (String(me) < String(id) && pc.signalingState === "stable" && !pc.localDescription) {
+        pc.createOffer().then((offer) => pc.setLocalDescription(offer)).then(() => relay(id, "offer", pc.localDescription.toJSON())).catch((e) => setError(e.message));
+      }
+    }
+  }, [joined, voiceKey, me]);
+  useEffect(() => {
+    if (localStream.current) for (const track of localStream.current.getAudioTracks()) track.enabled = joined && !muted && allowed;
+  }, [joined, muted, allowed]);
+  useEffect(() => {
+    const onSignal = async ({ from, type, payload }) => {
+      // Server accepts relays only from active room listeners; avoid dropping an
+      // offer when the room snapshot and signaling packet arrive back-to-back.
+      if (!joined) return;
+      try {
+        const pc = createPeer(from);
+        if (type === "offer") {
+          await pc.setRemoteDescription(payload);
+          for (const candidate of pendingIce.current.get(from) || []) await pc.addIceCandidate(candidate);
+          pendingIce.current.delete(from);
+          await pc.setLocalDescription(await pc.createAnswer());
+          await relay(from, "answer", pc.localDescription.toJSON());
+        } else if (type === "answer" && pc.signalingState === "have-local-offer") {
+          await pc.setRemoteDescription(payload);
+          for (const candidate of pendingIce.current.get(from) || []) await pc.addIceCandidate(candidate);
+          pendingIce.current.delete(from);
+        } else if (type === "ice") {
+          if (pc.remoteDescription) await pc.addIceCandidate(payload);
+          else pendingIce.current.set(from, [...(pendingIce.current.get(from) || []), payload]);
+        }
+      } catch (e) { setError("Ovozli aloqa ulanmayapti. Qayta urinib ko‘ring."); }
+    };
+    socket.on("room:voice:signal", onSignal);
+    return () => socket.off("room:voice:signal", onSignal);
+  }, [joined, room.code, voiceKey]);
+  useEffect(() => () => {
+    for (const pc of peers.current.values()) pc.close();
+    peers.current.clear();
+    for (const track of localStream.current?.getTracks() || []) track.stop();
+  }, []);
+  const toggle = async () => {
+    if (joined) {
+      setJoined(false); setRemoteStreams([]);
+      try { await send("room:voice", { enabled: false }); } catch (e) { setError(e.message); }
+      for (const track of localStream.current?.getTracks() || []) track.stop();
+      localStream.current = null;
+      return;
+    }
+    setError("");
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error("Mikrofon uchun HTTPS orqali kiring va brauzer ruxsatini yoqing.");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      try { await send("room:voice", { enabled: true }); }
+      catch (e) { stream.getTracks().forEach((track) => track.stop()); throw e; }
+      localStream.current = stream;
+      for (const track of stream.getAudioTracks()) track.enabled = !muted && allowed;
+      setJoined(true);
+    } catch (e) { setError(e.name === "NotAllowedError" ? "Mikrofondan foydalanishga ruxsat bering." : e.message || "Mikrofonni yoqib bo‘lmadi."); }
+  };
+  return <div className="voice-widget">
+    <button type="button" className={`voice-button ${joined ? "active" : ""}`} onClick={() => void toggle()} aria-label={joined ? "Ovozli chatdan chiqish" : "Ovozli chatga qo‘shilish"} title="Ovozli chat">{joined ? "🎙️" : "🎤"}<span>{joined ? "Ovozda" : "Ovozli chat"}</span></button>
+    {joined && <><button type="button" className={`voice-mute ${muted ? "muted" : ""}`} onClick={() => setMuted(!muted)} aria-label={muted ? "Mikrofonni yoqish" : "Mikrofonni o‘chirish"}>{muted || !allowed ? "Mikrofon o‘chiq" : "Mikrofon yoqilgan"}</button><span className="voice-count">{1 + voiceIds.length} 🎙</span></>}
+    {joined && !allowed && <span className="voice-hint">Mafia bosqichida mikrofon o‘chiq</span>}
+    {error && <span className="voice-error" role="status">{error}</span>}
+    <div className="voice-audio" aria-hidden="true">{remoteStreams.map(({ id, stream }) => <audio key={id} autoPlay ref={(el) => { if (el && el.srcObject !== stream) el.srcObject = stream; }} />)}</div>
+  </div>;
+}
 function Scoreboard({ room }) {
   const ranked = [...room.players].sort((a, b) => (b.wins || 0) - (a.wins || 0) || a.name.localeCompare(b.name));
   return <section className="panel scoreboard" aria-label="Umumiy natijalar">
@@ -241,7 +343,7 @@ function App() {
   }}><input id="room-code" inputMode="numeric" maxLength={6} value={code} placeholder="6 xonali kod" onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} /><button className="btn secondary" disabled={!canAct || code.length !== 6}>Qo‘shilish <span>↗</span></button></form></div></section>
  <div className="section-title"><h2>O‘yinni tanlang <span>03</span></h2><div className="home-settings"><label className="difficulty">UNO kartalari <select aria-label="UNO uchun boshlang‘ich karta soni" value={startingCards} onChange={(e) => setStartingCards(Number(e.target.value))}>{Array.from({length:14}, (_,i) => i+7).map(n => <option key={n} value={n}>{n} ta</option>)}</select></label><label className="difficulty">AI darajasi <select value={level} onChange={(e) => setLevel(e.target.value)}><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></label></div></div>
  <div className="games-grid">{Object.entries(catalog).map(([key, g], i) => <article className={`game-tile ${key}`} key={key}><div className="art-wrap"><span className="game-number">0{i + 1}</span><span className="players-tag">♧ {g.tag}</span><GameArt game={key} /></div><div className="tile-content"><div className="eyebrow">{g.eyebrow}</div><h2>{g.name}<span>{g.icon}</span></h2><p>{g.description}</p><button className="btn primary" disabled={!canAct || name.trim().length < 2} onClick={() => run(() => create(key, false))}>Xona yaratish <span>↗</span></button><button className="btn ai-button" disabled={!canAct || name.trim().length < 2} onClick={() => run(() => create(key, true))}><span>✧</span> AI bilan o‘ynash <span>→</span></button></div></article>)}</div><div className="home-bottom"><span><i className="dot" /> 3 o‘yin. Bir davra. Cheksiz raqobat.</span><span>Telefon yoki kompyuter — tanlov sizniki.</span></div></> : <>
- <div className="room-heading"><div><div className="eyebrow">{room.status === "waiting" ? "DO‘STLARNI KUTYAPMIZ" : room.status === "finished" ? "DAVRA YAKUNLANDI" : "O‘YIN DAVOM ETMOQDA"}</div><h1>{catalog[room.game].name} <small>/ xona</small></h1></div><div className="room-controls">{room.status !== "waiting" && isHost && <button className="btn restart-button" onClick={() => { if (room.status !== "playing" || window.confirm("Davom etayotgan o‘yin to‘xtaydi. Xonani qayta boshlaysizmi?")) run(() => send("room:reset")); }}>↻ Qayta boshlash</button>}<button className="code-pill" onClick={() => run(async () => {
+ <div className="room-heading"><div><div className="eyebrow">{room.status === "waiting" ? "DO‘STLARNI KUTYAPMIZ" : room.status === "finished" ? "DAVRA YAKUNLANDI" : "O‘YIN DAVOM ETMOQDA"}</div><h1>{catalog[room.game].name} <small>/ xona</small></h1></div><div className="room-controls"><VoiceChat room={room} me={me} send={send} />{room.status !== "waiting" && isHost && <button className="btn restart-button" onClick={() => { if (room.status !== "playing" || window.confirm("Davom etayotgan o‘yin to‘xtaydi. Xonani qayta boshlaysizmi?")) run(() => send("room:reset")); }}>↻ Qayta boshlash</button>}<button className="code-pill" onClick={() => run(async () => {
     await navigator.clipboard.writeText(room.code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2e3);
@@ -262,3 +364,4 @@ function App() {
  </div>;
 }
 createRoot(document.getElementById("root")).render(<App />);
+
