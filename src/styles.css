@@ -2129,3 +2129,112 @@ footer button {
 }
 .hand .card.selected { outline: 3px solid var(--lime); outline-offset: 2px; }
 
+/* Room view: keep only the current game’s useful information in the sidebar. */
+.has-room .sidebar > .nav-item,
+.has-room .sidebar .mini-card,
+.has-room .sidebar .version {
+  display: none;
+}
+.has-room .sidebar .nav-label {
+  margin-top: 38px;
+  margin-bottom: 14px;
+  color: var(--lime);
+}
+.sidebar-room-content { display: none; }
+.has-room .sidebar-room-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  margin: 0 -5px;
+  padding: 0 5px 12px;
+}
+.sidebar-roster { display: grid; gap: 7px; }
+.sidebar-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5px 5px;
+  color: #7f8997;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+.sidebar-section-heading b { color: #d7e9c2; letter-spacing: 0; }
+.sidebar-player {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 9px 8px;
+  border: 1px solid #ffffff10;
+  border-radius: 9px;
+  background: #171d24;
+}
+.sidebar-player.turn { border-color: #9ecb62; background: #222e26; }
+.sidebar-player.out { opacity: .55; }
+.sidebar-avatar {
+  display: grid;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 9px;
+  background: #29333a;
+  color: #d7e9c2;
+  font-size: 12px;
+  font-weight: 800;
+}
+.sidebar-avatar.tone-1 { background: #352d42; color: #d5b9ff; }
+.sidebar-avatar.tone-2 { background: #3b3029; color: #ffd29c; }
+.sidebar-avatar.tone-3 { background: #273846; color: #a9dcff; }
+.sidebar-player-copy { display: grid; min-width: 0; gap: 4px; }
+.sidebar-player-copy b { overflow: hidden; color: #e8ebed; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-player-copy small { color: #b6d88a; font-size: 9px; }
+.sidebar-player.out .sidebar-player-copy small { color: #8d96a1; }
+.sidebar-turn-dot { width: 7px; height: 7px; margin-left: auto; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px #bef17888; }
+.has-room .sidebar-room-content .scoreboard {
+  margin: 0;
+  padding: 12px 9px;
+  border-color: #303944;
+  background: #171d24;
+}
+.has-room .sidebar-room-content .scoreboard .section-title { align-items: flex-start; gap: 5px; }
+.has-room .sidebar-room-content .scoreboard .section-title h2 { font-size: 12px; }
+.has-room .sidebar-room-content .scoreboard .tag { padding: 5px 7px; font-size: 9px; }
+.has-room .sidebar-room-content .scoreboard-list { max-height: none; gap: 4px; }
+.has-room .sidebar-room-content .scoreboard-player { grid-template-columns: 22px minmax(0,1fr); gap: 5px; padding: 7px 5px; font-size: 9px; }
+.has-room .sidebar-room-content .score-wins { grid-column: 2; font-size: 9px; }
+.has-room main > .scoreboard,
+.has-room main > .opponents,
+.has-room .lobby .scoreboard { display: none; }
+.play-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); gap: 18px; align-items: start; }
+.play-main { min-width: 0; }
+.has-room .play-layout > .room-chat {
+  position: sticky;
+  top: 14px;
+  margin-top: 0;
+  max-height: calc(100vh - 115px);
+  min-height: 390px;
+}
+.has-room .play-layout > .room-chat .chat-messages { min-height: 220px; max-height: none; }
+.has-room .play-layout > .room-chat .chat-message { padding: 14px 0; }
+.has-room .play-layout > .room-chat .chat-message b,
+.has-room .play-layout > .room-chat .chat-message p { font-size: 12px; }
+@media (max-width: 1150px) and (min-width: 851px) {
+  .play-layout { grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; }
+}
+@media (max-width: 850px) {
+  .has-room .sidebar-room-content { display: none; }
+  .has-room .sidebar .nav-label { display: none; }
+  .has-room main > .scoreboard,
+  .has-room main > .opponents,
+  .has-room .lobby .scoreboard { display: block; }
+  .has-room main > .opponents { display: flex; }
+  .play-layout { display: block; }
+  .has-room .play-layout > .room-chat { position: static; max-height: 390px; min-height: 0; margin-top: 18px; }
+  .has-room .play-layout > .room-chat .chat-messages { min-height: 110px; max-height: 210px; }
+}
+
